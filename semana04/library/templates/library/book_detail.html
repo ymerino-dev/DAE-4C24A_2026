@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ book.title }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem auto; max-width: 720px; }
+    h1 { margin-bottom: 0.2rem; }
+    .subtitle { color: #555; margin-top: 0; }
+    .card { border: 1px solid #ddd; border-radius: 6px; padding: 1rem 1.25rem; }
+    .row { display: flex; gap: 0.5rem; padding: 0.2rem 0; }
+    .label { font-weight: bold; min-width: 180px; }
+    .photo { width: 120px; border-radius: 4px; }
+    .tag { background: #eef; border-radius: 3px; padding: 0.1rem 0.5rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #eee; padding: 0.35rem 0.5rem; text-align: left; }
+  </style>
+</head>
+<body>
+
+  <h1>{{ book.title }}</h1>
+  <p class="subtitle">
+    by {{ book.author.first_name }} {{ book.author.last_name }}
+  </p>
+
+  <div class="card">
+
+    <div class="row">
+      <span class="label">Title:</span>
+      <span>{{ book.title }}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Author full name:</span>
+      <span>{{ book.author.first_name }} {{ book.author.last_name }}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Author photo:</span>
+      <span>
+        {% with profile=book.author.profile %}
+          {% if profile %}
+            {% if profile.photo %}
+              <img class="photo" src="{{ profile.photo.url }}"
+                   alt="Photo of {{ book.author }}">
+            {% else %}
+              No photo available.
+            {% endif %}
+          {% else %}
+            No profile available.
+          {% endif %}
+        {% endwith %}
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="label">Categories:</span>
+      <span>
+        {% for category in book.categories.all %}
+          <span class="tag">{{ category.name }}</span>
+        {% empty %}
+          No categories.
+        {% endfor %}
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="label">ISBN:</span>
+      <span>{{ book.isbn|default:"-" }}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Publication year:</span>
+      <span>{{ book.publication_year|default:"-" }}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Pages:</span>
+      <span>{{ book.pages|default:"-" }}</span>
+    </div>
+
+  </div>
+
+  <h2>Publications</h2>
+
+  {% if book.publications.all %}
+    <table>
+      <thead>
+        <tr>
+          <th>Publisher</th>
+          <th>Publication date</th>
+          <th>Edition</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for publication in book.publications.all %}
+          <tr>
+            <td>{{ publication.publisher.name }}</td>
+            <td>{{ publication.publication_date|date:"Y-m-d" }}</td>
+            <td>{{ publication.edition }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>This book has no registered publications.</p>
+  {% endif %}
+
+  <p><a href="{% url 'admin:library_book_change' book.pk %}">Edit in admin</a></p>
+
+</body>
+</html>
