@@ -1,0 +1,283 @@
+/* Book detail page - library theme */
+
+:root {
+  --ink: #2b2118;
+  --ink-soft: #6b5b4b;
+  --paper: #fdfaf4;
+  --card: #ffffff;
+  --accent: #8c3b2e;
+  --accent-soft: #f3e6e0;
+  --gold: #b08d3f;
+  --line: #e8ded0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 3rem 1.25rem 4rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(176, 141, 63, 0.07), transparent 45%),
+    radial-gradient(circle at 88% 92%, rgba(140, 59, 46, 0.06), transparent 45%);
+  line-height: 1.65;
+}
+
+.page {
+  max-width: 62rem;
+  margin: 0 auto;
+}
+
+/* ---------- Header ---------- */
+
+.masthead {
+  text-align: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 3px double var(--gold);
+  margin-bottom: 2.5rem;
+}
+
+.masthead .eyebrow {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.6rem;
+}
+
+.masthead h1 {
+  font-size: 2.4rem;
+  font-weight: 400;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.masthead .rule {
+  width: 4rem;
+  height: 1px;
+  background: var(--accent);
+  margin: 1rem auto 0;
+}
+
+/* ---------- Layout ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: 13rem 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (max-width: 46rem) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Book spine / cover ---------- */
+
+.cover {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 1.1rem 1rem 1.4rem;
+  text-align: center;
+  box-shadow: 3px 3px 0 var(--accent-soft);
+}
+
+.cover .spine {
+  height: 0.5rem;
+  background: linear-gradient(90deg, var(--accent), var(--gold));
+  border-radius: 2px 2px 0 0;
+  margin: -1.1rem -1rem 1.1rem;
+}
+
+.cover .label {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 0.8rem;
+}
+
+.cover .cover-photo {
+  width: 100%;
+  border-radius: 3px;
+  display: block;
+}
+
+.cover .no-photo {
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  padding: 2.2rem 0.5rem;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+
+.cover .author {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* ---------- Details ---------- */
+
+.details {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.5rem 1.75rem 1.25rem;
+}
+
+.details h2,
+.publications h2 {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+  margin: 1.75rem 0 0.9rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px dotted var(--line);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row .key {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-top: 0.15rem;
+}
+
+.row .value {
+  font-size: 1rem;
+}
+
+.biography {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #4a3d31;
+  margin: 0;
+}
+
+/* ---------- Tags ---------- */
+
+.tag {
+  display: inline-block;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid #e6d3cb;
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  margin: 0 0.35rem 0.35rem 0;
+}
+
+.muted {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* ---------- Publications table ---------- */
+
+.publications {
+  margin-top: 2.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+th {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: left;
+  padding: 0.8rem 1.1rem;
+  background: #fbf7ef;
+  border-bottom: 2px solid var(--gold);
+}
+
+td {
+  padding: 0.8rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+td.edition {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.empty {
+  background: var(--card);
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-soft);
+}
+
+.footer a:hover {
+  border-bottom-color: var(--accent);
+}
