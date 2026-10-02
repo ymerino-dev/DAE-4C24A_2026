@@ -1,10 +1,20 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>News</title>
-</head>
-<body>
-  <h1>Portal de noticias</h1>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Home - News Portal{% endblock %}
+
+{% block content %}
+  <h1>Latest News</h1>
+
+  {% for article in articles %}
+    {% include 'news/_article_card.html' with article=article %}
+  {% empty %}
+    <p>No articles have been published yet.</p>
+  {% endfor %}
+{% endblock %}
+
+{% block sidebar %}
+  <section class="widget">
+    <h2 class="widget__title">About</h2>
+    <p>News Portal: the latest articles on technology, sports and culture.</p>
+  </section>
+{% endblock %}
