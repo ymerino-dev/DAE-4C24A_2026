@@ -103,3 +103,42 @@ Puntos clave del mecanismo:
 - **Excepciones conscientes**: cuando se necesita renderizar HTML de confianza
   (por ejemplo, contenido enriquecido sanitizado), debe hacerse de forma
   explícita y controlada, nunca con entrada directa del usuario.
+
+## Paso 13 — Matriz de casos de prueba
+
+| Caso | Descripción | Procedimiento | Resultado esperado | Estado |
+|---|---|---|---|---|
+| 1 | Renderizado de portada con listado de noticias | Ejecutar `seed_news` y abrir `/` | La portada muestra las 6 noticias ordenadas de más reciente a más antigua, cada una con tarjeta (imagen, título, autor, fecha `d/m/Y H:i`, excerpt de 20 palabras y etiquetas) | ✅ Verificado |
+| 2 | Renderizado del estado sin datos (`{% empty %}`) | Acceder a una categoría sin artículos (o vaciar la tabla `Article`) | Se muestra el mensaje "No articles in this category yet." en lugar de una página en blanco o error | ✅ Verificado |
+| 3 | Filtrado de publicaciones por categoría reutilizando el componente tarjeta | Abrir `/category/technology/` | Solo se listan las 2 artículos de la categoría, renderizadas con el mismo fragmento `_article_card.html` que la portada | ✅ Verificado |
+| 4 | Renderizado de detalle de noticia y verificación de protección XSS | Crear un artículo con `<script>alert("XSS")</script>` en `body` y abrir su detalle | La página responde `200 OK` y el script aparece escapado (`&lt;script&gt;`); nunca se ejecuta como código | ✅ Verificado |
+
+## Conclusiones técnicas
+
+1. **Herencia de plantillas y principio DRY.** La plantilla `base.html`
+   define una única vez la estructura común del sitio (cabecera, hoja de
+   estilos, layout de dos columnas, footer) y expone bloques (`title`,
+   `content`, `sidebar`) que cada plantilla hija reutiliza y sobrescribe.
+   Cualquier cambio visual o estructural se realiza en un solo punto y
+   propaga automáticamente a todas las vistas, eliminando duplicación y
+   reduciendo el riesgo de inconsistencias entre páginas.
+
+2. **Componentes modulares reutilizables.** El fragmento
+   `_article_card.html` encapsula la presentación completa de una noticia
+   (imagen, metadatos, excerpt, etiquetas) y se reutiliza mediante
+   `{% include %}` tanto en la portada como en el listado por categoría. Esto
+   garantiza que la tarjeta se vea y se comporte idénticamente en cualquier
+   contexto, y que futuras mejoras (por ejemplo, un badge de "destacada")
+   se implementen una sola vez.
+
+3. **Desacoplamiento de la gestión de contenido.** La capa de datos
+   (modelos `Category`, `Author`, `Article` con sus relaciones), la capa de
+   administración (`ModelAdmin` con buscado, filtros y slugs
+   autocompletados) y la capa de presentación (vistas, URLs nombradas y
+   plantillas) son independientes entre sí. El contenido se gestiona
+   centralizadamente desde el panel de administración o mediante el comando
+   `seed_news`, y el frontend lo consume sin conocer los detalles de
+   almacenamiento. Esta separación permite escalar el proyecto (nuevas
+   vistas, APIs o temas) sin modificar los modelos, y refuerza la seguridad:
+   el contenido ingresado por usuarios se escapa automáticamente al
+   renderizarse, mitigando XSS por diseño.
