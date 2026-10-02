@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ article.title }} - News Portal{% endblock %}
+
+{% block content %}
+  <article class="article-card">
+    <div class="article-card__body">
+      <h1 class="article-card__title">{{ article.title }}</h1>
+
+      <p class="article-card__meta">
+        By {{ article.author.name }} &middot;
+        {{ article.published_at|date:"d/m/Y H:i" }}
+      </p>
+
+      {% if article.featured_image %}
+        <img class="article-card__image" src="{{ article.featured_image.url }}"
+             alt="Featured image of {{ article.title }}">
+      {% endif %}
+
+      <ul class="tag-list">
+        {% for category in article.categories.all %}
+          <li>
+            <a class="tag" href="{% url 'news:category_detail' category.slug %}">{{ category.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <p class="article-card__excerpt">{{ article.body|linebreaks }}</p>
+    </div>
+  </article>
+{% endblock %}
+
+{% block sidebar %}
+  <section class="widget">
+    <h2 class="widget__title">Author</h2>
+    <p><strong>{{ article.author.name }}</strong></p>
+    <p>{{ article.author.bio|truncatewords:20 }}</p>
+  </section>
+{% endblock %}
