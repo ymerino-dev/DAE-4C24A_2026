@@ -117,6 +117,14 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Absolute path to the directory static files should be collected to.
+# Don't put anything in this directory yourself; put your static files in
+# the app's "static/" subdirectory instead.
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'movies' / 'static',
+]
+
 # User-uploaded files (MEDIA_URL = URL prefix, MEDIA_ROOT = filesystem location)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
