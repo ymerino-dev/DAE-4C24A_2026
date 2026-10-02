@@ -1,33 +1,72 @@
-{% load static %}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}News Portal{% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Portal de Noticias{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
+  
   <header class="site-header">
-    <div class="site-header__inner">
-      <a class="site-header__brand" href="{% url 'news:home' %}">News Portal</a>
-      <nav class="site-header__nav">
-        <a href="{% url 'news:home' %}">Home</a>
+    <div class="header-container">
+      <a href="{% url 'news:home' %}" class="logo">
+        News<span class="logo-span">Portal</span>
+      </a>
+      <nav class="nav-links">
+        <a href="{% url 'news:home' %}">Inicio</a>
+        <a href="{% url 'news:category_detail' 'technology' %}">Tecnología</a>
+        <a href="{% url 'news:category_detail' 'sports' %}">Deportes</a>
       </nav>
     </div>
   </header>
 
-  <div class="page">
-    <main class="page__main">
-      {% block content %}{% endblock %}
-    </main>
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
 
-    <aside class="page__sidebar">
-      {% block sidebar %}{% endblock %}
-    </aside>
+  <section class="hero-section">
+    <h1>Últimas Noticias</h1>
+    <p>Las noticias más recientes y relevantes del día</p>
+  </section>
+
+  <div class="articles-grid">
+    {% for article in articles %}
+      {% include 'news/_article_card.html' with article=article %}
+    {% empty %}
+      <p style="text-align: center; color: #7f8c8d; padding: 3rem;">No hay artículos publicados aún.</p>
+    {% endfor %}
   </div>
 
-  <footer class="site-footer">
-    <p>&copy; {% now "Y" %} News Portal. All rights reserved.</p>
-  </footer>
+  <nav class="pagination">
+    {% if is_paginated %}
+      {% if page_obj.has_previous %}
+        <a href="?page=1" class="page-link">Primera</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="page-link">Anterior</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="page-link">Siguiente</a>
+        <a href="?page={{ paginator.num_pages }}" class="page-link">Última</a>
+      {% endif %}
+    {% endif %}
+  </nav>
+  </div>
+</section>
+
+  <aside class="sidebar">
+    {% include 'news/_sidebar.html' %}
+  </aside>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-container">
+    <p>&copy; {{ now "Y" }} Portal de Noticias. Todos los derechos reservados.</p>
+    <div class="footer-links">
+      <a href="#about">Acerca</a>
+      <a href="#contact">Contacto</a>
+    </div>
+  </div>
+</footer>
+
 </body>
 </html>

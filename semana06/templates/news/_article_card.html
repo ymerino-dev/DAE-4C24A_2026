@@ -1,36 +1,42 @@
 <article class="article-card">
   {% if article.featured_image %}
     <img class="card-image" src="{{ article.featured_image.url }}"
-         alt="Featured image of {{ article.title }}" loading="lazy">
+         alt="Featured image: {{ article.title }}" loading="lazy">
   {% else %}
-    <div class="card-placeholder">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="1.5">
+    <div class="card-image-wrapper">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#7f8c8d" stroke-width="1.5" style="margin: 0 auto; display: block;">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
         <line x1="9" y1="9" x2="9.01" y2="9.01"/>
         <line x1="15" y1="9" x2="15.01" y2="9.01"/>
         <line x1="9" y1="15" x2="9.01" y2="15.01"/>
         <line x1="15" y1="15" x2="15.01" y2="15.01"/>
       </svg>
-      <span>Sin imagen</span>
+      <p style="text-align: center; margin-top: 0.5rem; color: #7f8c8d; font-size: 0.8rem;">Sin imagen</p>
     </div>
   {% endif %}
 
-  <div class="card-body">
+  <div class="card-content">
+    {% if article.categories.exists %}
+      <span class="card-category">{{ article.categories.first.name }}</span>
+    {% endif %}
+
     <h2 class="card-title">
       <a href="{% url 'news:article_detail' article.slug %}">{{ article.title }}</a>
     </h2>
 
     <p class="card-meta">
-      By {{ article.author.name }} &middot;
-      {{ article.published_at|date:"d/m/Y H:i" }}
+      Por {{ article.author.name }} ·
+      {{ article.published_at|date:"F j, Y" }}
     </p>
 
     <p class="card-excerpt">{{ article.body|truncatewords:20 }}</p>
 
-    <ul class="tag-list">
+    <div class="tags">
       {% for category in article.categories.all %}
-        <li><a class="tag" href="{% url 'news:category_detail' category.slug %}">{{ category.name }}</a></li>
+        <span class="tag">{{ category.name }}</span>
+      {% empty %}
+        <span class="tag">Sin etiquetas</span>
       {% endfor %}
-    </ul>
+    </div>
   </div>
 </article>

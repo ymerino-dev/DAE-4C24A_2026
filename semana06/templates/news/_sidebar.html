@@ -1,0 +1,23 @@
+<aside class="sidebar">
+  <div class="widget">
+    <h3>Categorías</h3>
+    <ul>
+      {% for category in categories %}
+        <li><a href="{% url 'news:category_detail' category.slug %}">{{ category.name }}</a></li>
+      {% empty %}
+        <li>No hay categorías</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="widget">
+    <h3>Últimas Noticias</h3>
+    <ul>
+      {% for article in recent_articles %}
+        <li><a href="{% url 'news:article_detail' article.slug %}">{{ article.title }}</a></li>
+      {% empty %}
+        <li>No hay noticias recientes</li>
+      {% endfor %}
+    </ul>
+  </div>
+</aside>
