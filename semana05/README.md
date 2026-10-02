@@ -17,6 +17,10 @@ administracion con clases `ModelAdmin` e inlines.
 | `movies/tests.py` | 22 pruebas de modelos, comando y configuracion del admin |
 | `movies/migrations/0001_initial.py` | Esquema inicial de la base de datos |
 | `movies/management/commands/create_admin.py` | Crea el superusuario `admin` si no existe |
+| `movies/management/commands/setup_roles.py` | Crea grupo `editores` con permisos restringidos y usuario `editor_user` |
+| `movies/views.py` | `MovieRecommendationView` - vista pública de recomendaciones por género |
+| `movies/templates/movies/recommendations.html` | Interfaz cinematográfica oscura (dorado/rojo), responsive |
+| `movies/urls.py` | Rutas de la app `movies` (`recommendations/`) |
 | `requirements.txt` | Dependencias fijadas |
 
 ## Modelos
@@ -36,11 +40,13 @@ python -m venv .venv
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py create_admin
+python manage.py setup_roles
 python manage.py test
 python manage.py runserver
 ```
 
 Panel de administracion: <http://127.0.0.1:8000/admin/>
+Vista pública de recomendaciones: <http://127.0.0.1:8000/recommendations/>
 
 | Campo | Valor |
 |---|---|
@@ -49,6 +55,39 @@ Panel de administracion: <http://127.0.0.1:8000/admin/>
 | Contrasena | `AdminPassword123!` |
 
 > `create_admin` es idempotente: si el superusuario ya existe no lo modifica.
+
+## Comando `setup_roles`
+
+Crea el grupo **editores** con permisos restringidos sobre `Movie`:
+
+- `add_movie` — Añadir películas
+- `change_movie` — Modificar películas
+- `view_movie` — Ver películas
+- **Excluye**: `delete_movie`
+
+Y crea el usuario de prueba:
+
+| Campo | Valor |
+|---|---|
+| Usuario | `editor_user` |
+| Correo | `editor@cine.com` |
+| Contrasena | `Editor12345!` |
+| Grupo | `editores` |
+
+```bash
+python manage.py setup_roles
+```
+
+## Vista pública: Recomendaciones Cinematográficas
+
+Accesible en `/recommendations/`. Muestra las películas mejor valoradas agrupadas por género.
+
+**Características:**
+- Tema oscuro estilo cine (fondo `#0a0a0a`, acentos dorado `#d4a843` y rojo `#b31b1b`)
+- Diseño responsive (grid 2-5 columnas según ancho)
+- Tarjetas con hover effects, rating badge, portada lazy-loaded
+- Animaciones de entrada escalonadas por género
+- Accesible: `prefers-reduced-motion`, focus-visible, ARIA labels
 
 ## Pruebas
 
