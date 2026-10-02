@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - News Portal{% endblock %}
+
+{% block content %}
+  <h1>Category: {{ category.name }}</h1>
+
+  {% for article in articles %}
+    {% include 'news/_article_card.html' with article=article %}
+  {% empty %}
+    <p>No articles in this category yet.</p>
+  {% endfor %}
+{% endblock %}
+
+{% block sidebar %}
+  <section class="widget">
+    <h2 class="widget__title">Categories</h2>
+    <ul>
+      {% for cat in categories %}
+        <li><a href="{% url 'news:category_detail' cat.slug %}">{{ cat.name }}</a></li>
+      {% empty %}
+        <li><a href="{% url 'news:home' %}">All news</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endblock %}

@@ -27,5 +27,9 @@ def category_detail(request, slug):
     return render(
         request,
         'news/category_detail.html',
-        {'category': category, 'articles': articles},
+        {
+            'category': category,
+            'articles': articles,
+            'categories': Category.objects.all(),
+        },
     )
