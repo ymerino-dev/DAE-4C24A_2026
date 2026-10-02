@@ -21,6 +21,7 @@
 | `semana03` | — | *pendiente* |
 | **`semana04`** | **Relacion de Modelos en Django** | **completo** |
 | **`semana05`** | **Modelos de Peliculas y Django Admin** | **completo** |
+| **`semana06`** | **Portal de Noticias (News)** | **completo** |
 
 ---
 
