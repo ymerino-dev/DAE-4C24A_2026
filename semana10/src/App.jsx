@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Header, Hero, MovieList, Footer } from "@cartelera/index.jsx";
+import { Header, Hero, MovieList, Footer, MovieSearch } from "@cartelera/index.jsx";
 import { contact, links, movies } from "./data/movies.js";
 
 const FAV_KEY = "cine-favoritas";
