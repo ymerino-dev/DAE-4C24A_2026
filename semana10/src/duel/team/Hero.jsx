@@ -12,11 +12,6 @@ export default function Hero({ movie }) {
           Ver horarios
         </a>
       </div>
-      <div className="hero-image">
-        <img src={movie.image} alt={`Afiche de ${movie.title}`} loading="lazy" />
-        <div className="hero-image-overlay" />
-        <span className="hero-classification-chip">{movie.classification}</span>
-      </div>
     </section>
   );
 }
