@@ -1,4 +1,5 @@
 import MovieCard from "./MovieCard.jsx";
+import useWindowSize from "../../hooks/useWindowSize.js";
 
 export default function MovieList({
   movies,
@@ -6,10 +7,13 @@ export default function MovieList({
   onToggleFavorite,
   favorites = [],
 }) {
+  const width = useWindowSize();
+  const columns = width < 560 ? 1 : width < 900 ? 2 : width < 1200 ? 3 : 4;
+  const normalizedSearch = searchText.trim().toLowerCase();
   const filtered = movies.filter((movie) =>
     !searchText
       ? true
-      : movie.title.toLowerCase().includes(searchText.toLowerCase())
+      : movie.title.toLowerCase().includes(normalizedSearch)
   );
 
   if (filtered.length === 0) {
@@ -21,7 +25,7 @@ export default function MovieList({
   }
 
   return (
-    <ul className="movie-list">
+    <ul className="movie-list" style={{ "--movie-columns": columns }}>
       {filtered.map((movie) => (
         <li key={movie.id}>
           <MovieCard

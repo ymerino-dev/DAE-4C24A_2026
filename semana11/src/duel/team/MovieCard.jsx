@@ -2,9 +2,10 @@ import Showtimes from "./Showtimes.jsx";
 import Synopsis from "./Synopsis.jsx";
 import Button from "./Button.jsx";
 
-export default function MovieCard({ movie, onToggleFavorite, isFavorite = false }) {
+export default function MovieCard({ movie, onToggleFavorite, onNotifyFavorite, isFavorite = false }) {
   const handleToggle = () => {
     if (onToggleFavorite) onToggleFavorite(movie.id);
+    if (onNotifyFavorite) onNotifyFavorite(movie, isFavorite);
   };
 
   return (

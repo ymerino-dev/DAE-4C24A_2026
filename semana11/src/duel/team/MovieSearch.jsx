@@ -1,26 +1,5 @@
-// Semana 10 — Buscador controlado.
-// El texto vive en el estado local y onChange lo actualiza en cada pulsación.
-// Un retardo (debounce) evita que el filtrado se dispare con cada letra.
-import { useState, useRef, useEffect } from "react";
-
-export default function MovieSearch({ onSearch, debounceMs = 400 }) {
-  const [text, setText] = useState("");
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  const handleChange = (event) => {
-    const value = event.target.value;
-    setText(value);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      onSearch(value);
-    }, debounceMs);
-  };
+// Controlled search field; the shared filter state is owned by App.
+export default function MovieSearch({ value, onSearch }) {
 
   return (
     <div className="search">
@@ -31,8 +10,8 @@ export default function MovieSearch({ onSearch, debounceMs = 400 }) {
         id="movie-search"
         type="search"
         className="input search-input"
-        value={text}
-        onChange={handleChange}
+        value={value}
+        onChange={(event) => onSearch(event.target.value)}
         placeholder="Buscar por título…"
         aria-label="Buscar película"
       />

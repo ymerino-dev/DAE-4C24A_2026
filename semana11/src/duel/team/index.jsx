@@ -8,3 +8,6 @@ export { default as Hero } from "./Hero.jsx";
 export { default as AgentMessage } from "./AgentMessage.jsx";
 export { default as Button } from "./Button.jsx";
 export { default as MovieSearch } from "./MovieSearch.jsx";
+export { default as FilterBanner } from "./FilterBanner.jsx";
+export { default as PremiereSection } from "./PremiereSection.jsx";
+export { default as LoadingSkeleton } from "./LoadingSkeleton.jsx";

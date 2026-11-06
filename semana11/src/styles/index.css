@@ -109,7 +109,7 @@ main { max-width: 78rem; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
 .synopsis, .agent-message { white-space: pre-line; max-width: 46rem; color: #b8b6bd; }
 .showtimes { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; margin: .5rem 0 0; }
 .showtimes li { background: #30251e; border: 1px solid #62472f; color: #ffd39a; border-radius: 999px; padding: .2rem .75rem; font-variant-numeric: tabular-nums; }
-.movie-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 1.2rem; list-style: none; padding: 0; }
+.movie-list { display: grid; grid-template-columns: repeat(var(--movie-columns, 4), minmax(0, 1fr)); gap: 1.2rem; list-style: none; padding: 0; }
 .movie-list > li { min-width: 0; }
 .movie-card { height: 100%; background: #1b1b21; border: 1px solid #ffffff14; border-radius: .9rem; overflow: hidden; transition: transform .2s ease, border-color .2s ease; }
 .movie-card:hover { transform: translateY(-4px); border-color: #ffbd6980; }
@@ -170,3 +170,32 @@ footer small { display: block; margin-top: .85rem; }
 /* Botón de favorita en la tarjeta */
 .favorite-button { margin-top: .8rem; width: 100%; }
 .favorite-state { font-size: .78rem; color: #7a7883; margin-top: .35rem; }
+
+/* Semana 11: comunicación entre hermanos, estrenos y estados de interfaz. */
+.favorite-counter { display: inline-flex; align-items: center; gap: .45rem; margin: 0; color: #d9d6de; font-size: .9rem; }
+.favorite-counter span { min-width: 1.6rem; padding: .1rem .45rem; border-radius: 999px; text-align: center; color: #17120d; background: #ffbd69; font-weight: 800; }
+.filter-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1.5rem 0; padding: 1rem 1.25rem; border: 1px solid #ffffff18; border-radius: .9rem; background: linear-gradient(110deg, #241c19, #1b1b21); }
+.filter-banner p { margin: .15rem 0; color: #c9c6d0; }
+.filter-banner .eyebrow { color: #ffbd69; }
+.premieres { margin-top: 2rem; }
+.premiere-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1.2rem; }
+.premiere-carousel { display: flex; gap: 1.2rem; overflow-x: auto; padding: 0 0 .75rem; scroll-snap-type: x mandatory; }
+.premiere-carousel:focus-visible { outline: 2px solid #ffbd69; outline-offset: 4px; }
+.premiere-carousel .premiere-card { flex: 0 0 min(19rem, 82vw); scroll-snap-align: start; }
+.premiere-card, .skeleton-card { overflow: hidden; border: 1px solid #ffffff14; border-radius: .9rem; background: #1b1b21; }
+.premiere-card img { display: block; width: 100%; aspect-ratio: 2 / 2.2; object-fit: cover; }
+.premiere-card > div { padding: .6rem 1rem 1rem; }
+.premiere-card h3 { margin: .25rem 0; }
+.premiere-card p:last-child { color: #aaa8af; }
+.skeleton-poster { aspect-ratio: 2 / 2.2; background: linear-gradient(100deg, #25252c 20%, #35343d 40%, #25252c 60%); background-size: 200% 100%; animation: skeleton-shimmer 1.3s linear infinite; }
+.skeleton-line { height: .8rem; margin: 1rem .9rem; border-radius: 1rem; background: #35343d; }
+.skeleton-line--short { width: 55%; margin-top: -.4rem; }
+.premiere-error { padding: 1.25rem; border: 1px solid #b3402e80; border-radius: .8rem; background: #b3402e18; color: #ffd1c9; }
+.premiere-error p { margin-top: 0; }
+.Toastify__toast { font-family: inherit; }
+@keyframes skeleton-shimmer { to { background-position-x: -200%; } }
+@media (max-width: 650px) {
+  .filter-banner { align-items: flex-start; flex-direction: column; }
+  .movie-list { grid-template-columns: repeat(var(--movie-columns, 1), minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .skeleton-poster { animation: none; } }

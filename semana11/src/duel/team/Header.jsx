@@ -1,4 +1,4 @@
-export default function Header({ name, links, children }) {
+export default function Header({ name, links, children, favoriteCount = 0 }) {
   return (
     <header>
       <h1>{name}</h1>
@@ -12,6 +12,9 @@ export default function Header({ name, links, children }) {
             ))}
           </ul>
         </nav>
+        <p className="favorite-counter" aria-live="polite">
+          Favoritas <span>{favoriteCount}</span>
+        </p>
         {children}
       </div>
     </header>

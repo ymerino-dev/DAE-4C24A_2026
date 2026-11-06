@@ -1,56 +1,64 @@
-import { useState, useEffect } from "react";
-import { Header, Hero, MovieList, Footer, MovieSearch } from "@cartelera/index.jsx";
+import { useEffect, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  Header,
+  Hero,
+  MovieList,
+  Footer,
+  MovieSearch,
+  PremiereSection,
+  FilterBanner,
+} from "@cartelera/index.jsx";
 import { contact, links, movies } from "./data/movies.js";
+import { adaptMovie } from "./adapters/movieAdapter.js";
+import useDebounce from "./hooks/useDebounce.js";
 
 const FAV_KEY = "cine-favoritas";
+const adaptedMovies = movies.map(adaptMovie);
 
 export default function App() {
-  const featuredMovie = movies[0];
-
-  // Paso 4: estado de películas favoritas con useState.
-  const [favorites, setFavorites] = useState([]);
-  // Paso 9: texto del buscador.
-  const [searchText, setSearchText] = useState("");
-
-  // Paso 10: recuperar favoritas del almacenamiento del navegador al cargar.
-  useEffect(() => {
+  const [favorites, setFavorites] = useState(() => {
     try {
-      const saved = localStorage.getItem(FAV_KEY);
-      if (saved) setFavorites(JSON.parse(saved));
-    } catch {}
-  }, []);
+      return JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [searchText, setSearchText] = useState("");
+  const debouncedSearch = useDebounce(searchText, 400);
 
-  // Paso 10: guardar favoritas en el almacenamiento del navegador al cambiar.
   useEffect(() => {
     try {
       localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
-    } catch {}
+    } catch {
+      // The page remains usable when browser storage is unavailable.
+    }
   }, [favorites]);
 
-  // Paso 4: función que agrega o quita una película de la lista de favoritas.
   const toggleFavorite = (movieId) => {
-    setFavorites((prev) =>
-      prev.includes(movieId)
-        ? prev.filter((id) => id !== movieId)
-        : [...prev, movieId]
-    );
-  };
-
-  const isFavorite = (movieId) => favorites.includes(movie.id);
-
-  // Paso 9: manejador del buscador (recibe el texto ya debounceado de MovieSearch).
-  const handleSearch = (text) => {
-    setSearchText(text);
+    const movie = adaptedMovies.find((item) => item.id === movieId);
+    const wasFavorite = favorites.includes(movieId);
+    setFavorites((current) => (
+      current.includes(movieId)
+        ? current.filter((id) => id !== movieId)
+        : [...current, movieId]
+    ));
+    toast(wasFavorite ? `${movie.title} se quitó de favoritas.` : `${movie.title} se agregó a favoritas.`, {
+      type: wasFavorite ? "info" : "success",
+      position: "bottom-right",
+      autoClose: 2500,
+    });
   };
 
   return (
     <>
-      <Header name="Cine Tecsup" links={links}>
-        {/* Paso 9: buscador integrado en el encabezado, al costado del menú. */}
-        <MovieSearch onSearch={handleSearch} />
+      <Header name="Cine Tecsup" links={links} favoriteCount={favorites.length}>
+        <MovieSearch value={searchText} onSearch={setSearchText} />
       </Header>
       <main>
-        <Hero movie={featuredMovie} />
+        <Hero movie={adaptedMovies[0]} />
+        <FilterBanner searchText={searchText} onClear={() => setSearchText("")} />
         <section id="cartelera" aria-labelledby="movies-title">
           <div className="section-heading">
             <p className="eyebrow">EN PANTALLA</p>
@@ -58,18 +66,16 @@ export default function App() {
             <p>Elige tu próxima historia y encuentra el horario ideal.</p>
           </div>
           <MovieList
-            movies={movies}
-            searchText={searchText}
+            movies={adaptedMovies}
+            searchText={debouncedSearch}
             onToggleFavorite={toggleFavorite}
             favorites={favorites}
           />
         </section>
-        <section id="proximamente" className="coming-soon">
-          <p className="eyebrow">PRÓXIMAMENTE</p>
-          <p>Nuevas historias llegan muy pronto a nuestras salas.</p>
-        </section>
+        <PremiereSection searchText={searchText} />
       </main>
       <Footer contact={contact} />
+      <ToastContainer newestOnTop closeOnClick pauseOnFocusLoss />
     </>
   );
 }
