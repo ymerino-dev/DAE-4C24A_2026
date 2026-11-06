@@ -23,6 +23,7 @@
 | **`semana05`** | **Modelos de Peliculas y Django Admin** | **completo** |
 | **`semana06`** | **Portal de Noticias (News)** | **completo** |
 | **`semana10`** | **Cartelera Cine: componentes, eventos y favoritas** | **completo** |
+| **`semana11`** | **Cartelera Cine: componentes y eventos (base semana 10)** | **completo** |
 
 ---
 
