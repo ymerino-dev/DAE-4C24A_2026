@@ -1,16 +1,19 @@
-export default function Header({ name, links }) {
+export default function Header({ name, links, children }) {
   return (
     <header>
       <h1>{name}</h1>
-      <nav aria-label="Principal">
-        <ul>
-          {links.map((link) => (
-            <li key={link.href}>
-              <a href={link.href}>{link.label}</a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div className="header-right">
+        <nav aria-label="Principal">
+          <ul>
+            {links.map((link) => (
+              <li key={link.href}>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        {children}
+      </div>
     </header>
   );
 }

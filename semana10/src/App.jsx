@@ -45,7 +45,10 @@ export default function App() {
 
   return (
     <>
-      <Header name="Cine Tecsup" links={links} />
+      <Header name="Cine Tecsup" links={links}>
+        {/* Paso 9: buscador integrado en el encabezado, al costado del menú. */}
+        <MovieSearch onSearch={handleSearch} />
+      </Header>
       <main>
         <Hero movie={featuredMovie} />
         <section id="cartelera" aria-labelledby="movies-title">
@@ -54,8 +57,6 @@ export default function App() {
             <h2 id="movies-title">Nuestra cartelera</h2>
             <p>Elige tu próxima historia y encuentra el horario ideal.</p>
           </div>
-          {/* Paso 9: buscador integrado en el banner con su llamada a la acción. */}
-          <MovieSearch onSearch={handleSearch} />
           <MovieList
             movies={movies}
             searchText={searchText}
