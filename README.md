@@ -22,6 +22,7 @@
 | **`semana04`** | **Relacion de Modelos en Django** | **completo** |
 | **`semana05`** | **Modelos de Peliculas y Django Admin** | **completo** |
 | **`semana06`** | **Portal de Noticias (News)** | **completo** |
+| **`semana09`** | **Laboratorio 09: Introducción a ReactJS con Vite, componentes funcionales y props** | **completo** |
 | **`semana10`** | **Cartelera Cine: componentes, eventos y favoritas** | **completo** |
 | **`semana11`** | **Cartelera Cine: comunicación entre componentes, hooks y estrenos** | **completo** |
 

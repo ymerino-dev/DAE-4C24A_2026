@@ -29,3 +29,7 @@ media/
 *.swp
 .DS_Store
 Thumbs.db
+
+# Node / Vite
+node_modules/
+dist/

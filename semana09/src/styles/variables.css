@@ -1,0 +1,30 @@
+:root {
+  /* Colors */
+  --color-background: #0f1117;
+  --color-surface: #1b1e29;
+  --color-surface-hover: #262a38;
+  --color-text: #f7f7fa;
+  --color-muted: #a6aabe;
+  --color-accent: #e50914;
+  --color-border: #303546;
+
+  /* Typography */
+  --font-body: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.5rem;
+  --font-size-xl: 2.25rem;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2.5rem;
+
+  /* Shape and layout */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --container-width: 72rem;
+}
