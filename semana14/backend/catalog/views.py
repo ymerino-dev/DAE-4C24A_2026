@@ -2,14 +2,15 @@ from django.contrib.auth import authenticate
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Category, Product
+from .models import Category, Order, Product
 from .serializers import (
     CategorySerializer,
     LoginSerializer,
+    OrderSerializer,
     ProductSerializer,
     UserSerializer,
 )
@@ -72,4 +73,27 @@ class LoginView(APIView):
                 'user': UserSerializer(user).data,
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class OrderListCreateView(APIView):
+    """List the current user's orders or create a new order."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        orders = (
+            Order.objects.filter(user=request.user)
+            .prefetch_related('items')
+            .order_by('-created_at', '-id')
+        )
+        return Response(OrderSerializer(orders, many=True).data)
+
+    def post(self, request):
+        serializer = OrderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save(user=request.user)
+        return Response(
+            OrderSerializer(order).data,
+            status=status.HTTP_201_CREATED,
         )
