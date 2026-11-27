@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+
+# Generated media (recreated by seed.py)
+media/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
