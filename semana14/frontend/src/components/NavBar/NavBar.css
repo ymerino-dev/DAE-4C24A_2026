@@ -38,3 +38,16 @@
   background-color: #2563eb;
   color: #ffffff;
 }
+
+.navbar-user {
+  padding: 8px 14px;
+  color: #f9fafb;
+  font-weight: 600;
+}
+
+.logout-button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}

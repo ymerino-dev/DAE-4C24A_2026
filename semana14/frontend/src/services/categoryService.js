@@ -1,15 +1,13 @@
-import apiClient from './apiClient';
+import api from './api';
 
-export const getCategories = async () => apiClient.get('/categories/');
+export const getCategories = async () => api.get('/categories/');
 
-export const getCategoryById = async (id) =>
-  apiClient.get(`/categories/${id}/`);
+export const getCategoryById = async (id) => api.get(`/categories/${id}/`);
 
 export const createCategory = async (data) =>
-  apiClient.post('/categories/', data);
+  api.post('/categories/', data);
 
 export const updateCategory = async (id, data) =>
-  apiClient.put(`/categories/${id}/`, data);
+  api.put(`/categories/${id}/`, data);
 
-export const deleteCategory = async (id) =>
-  apiClient.delete(`/categories/${id}/`);
+export const deleteCategory = async (id) => api.delete(`/categories/${id}/`);

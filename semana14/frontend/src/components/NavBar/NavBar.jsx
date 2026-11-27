@@ -1,8 +1,11 @@
 import { NavLink } from 'react-router-dom';
 
+import { useAuth } from '../../context/AuthContext';
 import './NavBar.css';
 
 function NavBar() {
+  const { user, logout } = useAuth();
+
   return (
     <header className="navbar">
       <NavLink className="navbar-brand" to="/">
@@ -26,6 +29,27 @@ function NavBar() {
         >
           New Product
         </NavLink>
+        {user ? (
+          <>
+            <span className="navbar-user">{user.username}</span>
+            <button
+              className="nav-link logout-button"
+              type="button"
+              onClick={logout}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <NavLink
+            to="/login"
+            className={({ isActive }) =>
+              isActive ? 'nav-link active' : 'nav-link'
+            }
+          >
+            Login
+          </NavLink>
+        )}
       </nav>
     </header>
   );
