@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useCart } from '../../context/CartContext';
 import { getCategories } from '../../services/categoryService';
 import { deleteProduct, getProducts } from '../../services/productService';
 import './ProductCatalog.css';
@@ -9,6 +10,7 @@ const SKELETON_CARDS = [1, 2, 3, 4, 5, 6];
 
 function ProductCatalog() {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -151,6 +153,14 @@ function ProductCatalog() {
                   </span>
                 </div>
                 <div className="product-actions">
+                  <button
+                    className="cart-button"
+                    type="button"
+                    onClick={() => addToCart(product, 1)}
+                    disabled={product.stock <= 0}
+                  >
+                    Add to Cart
+                  </button>
                   <button
                     className="edit-button"
                     type="button"

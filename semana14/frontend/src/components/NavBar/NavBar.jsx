@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import './NavBar.css';
 
 function NavBar() {
   const { user, logout } = useAuth();
+  const { totalItems } = useCart();
 
   return (
     <header className="navbar">
@@ -28,6 +30,14 @@ function NavBar() {
           }
         >
           New Product
+        </NavLink>
+        <NavLink
+          to="/cart"
+          className={({ isActive }) =>
+            isActive ? 'nav-link active' : 'nav-link'
+          }
+        >
+          Cart <span className="cart-count">{totalItems}</span>
         </NavLink>
         {user ? (
           <>
