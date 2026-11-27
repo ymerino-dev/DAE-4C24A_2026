@@ -1,36 +1,28 @@
-# Product Catalog Front-End
+# Cliente React — Laboratorio 14
 
-React + Vite client for the Lab 13 e-commerce API. It consumes the Django REST
-backend at `http://127.0.0.1:8000/api` and runs at `http://localhost:5173`.
+Cliente de React 19 + Vite para la API del laboratorio 14. Consume el servidor
+Django REST en `http://127.0.0.1:8000/api` y se ejecuta en
+`http://localhost:5173`.
 
-## Setup
+La documentación arquitectónica completa está en `semana14/README.md`.
 
-```bash
+## Arranque
+
+```powershell
 npm install
-npm run dev
-```
-
-On Windows PowerShell, use `npm.cmd` if `npm.ps1` is blocked by the execution
-policy. To force the port expected by CORS:
-
-```bash
+Copy-Item .env.example .env
 npm.cmd run dev -- --port 5173 --strictPort
 ```
 
-Copy `.env.example` to `.env` if the local file is missing. The only setting is
-`VITE_API_BASE_URL=http://127.0.0.1:8000/api`.
+En PowerShell se usa `npm.cmd` porque la política de ejecución puede bloquear
+`npm.ps1`. El puerto 5173 debe respetarse porque es el origen permitido por
+CORS en el servidor.
 
-## Structure
+## Variables de entorno
 
-- `src/services/apiClient.js`: base Axios instance with `baseURL`.
-- `src/services/categoryService.js`: category endpoints.
-- `src/services/productService.js`: product endpoints and multipart uploads.
-- `src/components/ProductCatalog/`: catalog, filtering, loading/error states.
-- `src/components/ProductForm/`: create and edit form with `FormData`.
-- `src/components/NavBar/`: navigation bar.
-
-Components never import Axios and never hardcode API URLs. All API access goes
-through the service layer.
+```txt
+VITE_API_BASE_URL=http://127.0.0.1:8000/api
+```
 
 ## Scripts
 
@@ -39,3 +31,13 @@ npm run dev
 npm run build
 npm run lint
 ```
+
+## Estructura resumida
+
+- `src/services/`: capa HTTP con Axios y el interceptor de token.
+- `src/context/`: `AuthContext` y `CartContext`.
+- `src/components/`: una carpeta por componente, en PascalCase.
+- `src/App.jsx`: proveedores globales, rutas públicas y ruta protegida.
+
+Los componentes no importan Axios ni construyen URLs de API: toda petición
+pasa por `src/services/`.

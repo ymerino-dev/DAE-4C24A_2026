@@ -1,327 +1,322 @@
-# Laboratorio 13 — Estructura de una aplicación de comercio electrónico
+# Laboratorio 14 — Pedidos, autenticación por token y carrito persistente
 
-Documentación técnica del back-end con **Django REST Framework** y del cliente con
-**React + Vite + Axios**, desarrollados en `semana13/backend` y `semana13/frontend`.
+Documentación técnica del laboratorio 14. El back-end está implementado con
+**Django 6.1.3 + Django REST Framework** y el cliente con
+**React 19 + Vite + Axios**.
 
 - Repositorio: `https://github.com/ymerino-dev/DAE-4C24A_2026.git`
-- Rama: `main`
-- Modelos: `Category` y `Product` (en singular), en la aplicación dedicada `catalog`.
-- Idioma del código: 100 % inglés. Estilo: PEP 8 en Python; componentes en PascalCase
-  y hooks con prefijo `use` en React.
+- Rama de trabajo: `main`
+- Servidor: `http://127.0.0.1:8000`
+- Cliente: `http://localhost:5173`
+- Idioma: el código, los identificadores y los comentarios están en inglés;
+  esta documentación y las explicaciones entregables están en español.
+- Estilo: PEP 8 en Python; componentes React en PascalCase, una carpeta por
+  componente y hooks personalizados con prefijo `use`.
 
 ---
 
-## 1. Arquitectura y reparto de responsabilidades
+## 1. Estructura final de `semana14`
 
 ```text
- Navegador (http://localhost:5173)
- ├─ React + Vite + React Router
- ├─ Componentes: ProductCatalog, ProductForm, NavBar
- └─ Capa de servicios: apiClient → categoryService / productService
-              │  HTTP + JSON / multipart-form-data + CORS
-              ▼
- Servidor (http://127.0.0.1:8000)
- ├─ Django 6.1.3 + DRF + django-cors-headers + Pillow
- ├─ /api/categories/  → CategoryViewSet
- ├─ /api/products/    → ProductViewSet (filtro ?category=<id>)
- ├─ /admin/           → administración de Category y Product
- └─ /media/           → imágenes servidas cuando DEBUG=True
-              │
-              ▼
-     db.sqlite3  +  media/products/*.png (generados por seed.py)
+semana14/
+├── README.md                         # Este documento (entregable en español)
+├── backend/
+│   ├── .gitignore
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── create_superuser.py           # Superusuario desde variables de entorno
+│   ├── seed.py                       # Categorías, productos y PNG de ejemplo
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── settings.py               # DB, CORS, media, DRF y authtoken
+│   │   ├── urls.py                   # Router + login + pedidos
+│   │   ├── asgi.py
+│   │   └── wsgi.py
+│   └── catalog/
+│       ├── __init__.py
+│       ├── apps.py
+│       ├── models.py                 # Category, Product, Order, OrderItem
+│       ├── serializers.py            # Serializadores y creación atómica
+│       ├── views.py                  # ViewSets, LoginView, OrderListCreateView
+│       ├── admin.py                  # Admin con OrderItemInline
+│       ├── tests.py
+│       ├── migrations/
+│       │   ├── __init__.py
+│       │   ├── 0001_initial.py
+│       │   └── 0002_order_orderitem.py
+│       └── management/
+│           ├── __init__.py
+│           └── commands/
+│               ├── __init__.py
+│               └── create_test_users.py
+└── frontend/
+    ├── .env.example
+    ├── .gitignore
+    ├── .oxlintrc.json
+    ├── README.md                     # Notas de arranque del cliente
+    ├── index.html
+    ├── package.json
+    ├── package-lock.json
+    ├── vite.config.js
+    ├── public/
+    │   ├── favicon.svg
+    │   └── icons.svg
+    └── src/
+        ├── App.jsx                   # BrowserRouter, providers y rutas
+        ├── main.jsx
+        ├── index.css
+        ├── components/
+        │   ├── CartPage/
+        │   │   ├── CartPage.jsx
+        │   │   └── CartPage.css
+        │   ├── LoginPage/
+        │   │   ├── LoginPage.jsx
+        │   │   └── LoginPage.css
+        │   ├── MyOrdersPage/
+        │   │   ├── MyOrdersPage.jsx
+        │   │   └── MyOrdersPage.css
+        │   ├── NavBar/
+        │   │   ├── NavBar.jsx
+        │   │   └── NavBar.css
+        │   ├── ProductCatalog/
+        │   │   ├── ProductCatalog.jsx
+        │   │   └── ProductCatalog.css
+        │   ├── ProductDetailPage/
+        │   │   ├── ProductDetailPage.jsx
+        │   │   └── ProductDetailPage.css
+        │   ├── ProductForm/
+        │   │   ├── ProductForm.jsx
+        │   │   └── ProductForm.css
+        │   └── ProtectedRoute/
+        │       └── ProtectedRoute.jsx
+        ├── context/
+        │   ├── AuthContext.jsx       # AuthProvider + useAuth
+        │   └── CartContext.jsx       # CartProvider + useCart
+        └── services/
+            ├── api.js                # Axios + interceptor Token
+            ├── apiClient.js          # Re-exportación de api.js
+            ├── authService.js
+            ├── categoryService.js
+            ├── orderService.js
+            └── productService.js
 ```
 
-### 1.1 Servidor Back-End (`semana13/backend`)
+No se versionan `venv`, `node_modules`, `dist`, `__pycache__`, `db.sqlite3`,
+`media/`, `.env` ni la carpeta `.git` anidada. Estos artefactos son
+reproducibles o contienen configuración local.
 
-Responsabilidades:
+---
 
-| Archivo | Responsabilidad |
-|---|---|
-| `config/settings.py` | Configuración con `os.environ.get` (sin credenciales hardcodeadas), CORS, `MEDIA_URL` y `MEDIA_ROOT`. |
-| `config/urls.py` | `DefaultRouter` con `/api/categories/` y `/api/products/`; sirve `/media/` solo si `DEBUG` es `True`. |
-| `catalog/models.py` | Modelos `Category` y `Product` con la relación `ForeignKey`. |
-| `catalog/serializers.py` | Lectura anidada de la categoría y escritura por `category_id`. |
-| `catalog/views.py` | `ModelViewSet` para ambos modelos, filtrado opcional y parsers multipart. |
-| `catalog/admin.py` | Registro con `@admin.register`, `list_display`, `list_filter` y `search_fields`. |
-| `seed.py` | Genera 8 PNG reales con Pillow y siembra 3 categorías + 8 productos. |
-| `create_superuser.py` | Crea el superusuario `admin` / `admin123` solo si no existe. |
+## 2. Tabla comparativa Servidor vs. Cliente
 
-Comandos exactos de arranque:
+| Bloque | Servidor (Django / DRF) | Cliente (React / Vite) |
+|---|---|---|
+| Modelos | `Category`, `Product`, `Order` y `OrderItem` en `catalog/models.py`. `Order.user` usa `settings.AUTH_USER_MODEL`; `OrderItem` guarda `unit_price` congelado. | No existen modelos de dominio persistentes. Los productos y pedidos se consumen como JSON; el único estado local de dominio es el carrito. |
+| Serializadores | `CategorySerializer`, `ProductSerializer`, `UserSerializer`, `LoginSerializer`, `OrderItemSerializer` y `OrderSerializer`. El serializer de pedidos calcula `total` y descuenta stock. | No hay serializadores. Las funciones de `src/services/` envían y reciben JSON; los contexts convierten esas respuestas en estado de la interfaz. |
+| Autenticación | `rest_framework.authtoken` en `INSTALLED_APPS`; `TokenAuthentication` por defecto; `LoginView` usa `authenticate()` y `Token.objects.get_or_create()`. | `api.js` adjunta `Authorization: Token <token>`; `authService.js` consume `/auth/login/`; `AuthContext` guarda `token` y `user`; `ProtectedRoute` redirige a `/login`. |
+| Vistas y endpoints | `CategoryViewSet` y `ProductViewSet` (`ModelViewSet`); `LoginView` (`APIView`, `AllowAny`); `OrderListCreateView` (`APIView`, `IsAuthenticated`). | Pantallas que consumen esos endpoints: catálogo, detalle, formulario, carrito, login y mis pedidos. |
+| Rutas HTTP | `/api/categories/`, `/api/products/`, `/api/auth/login/`, `/api/orders/`, `/admin/` y `/media/` con `DEBUG=True`. | `/`, `/products/:id`, `/create`, `/edit/:id`, `/cart`, `/login`, `/my-orders`. |
+| Servicios / lógica | `OrderSerializer.create()` encapsula la regla de negocio: bloqueo de filas, validación de stock, precios actuales y descuento atómico. `ProductViewSet.get_queryset()` evita el problema N+1 con `select_related`. | `api.js`, `apiClient.js`, `authService.js`, `orderService.js`, `productService.js` y `categoryService.js` concentran todo el acceso HTTP. Ningún componente construye URLs ni importa Axios directamente. |
+| Contextos | El estado se mantiene en la base de datos; el token vive en la tabla `authtoken`. | `AuthContext` para sesión y `CartContext` para carrito global persistente. Ambos se montan una sola vez en `App.jsx`. |
+| Pantallas / administración | `/admin/` registra los cuatro modelos; `OrderAdmin` incluye `OrderItemInline` para editar líneas dentro del pedido. | Componentes con carpeta propia: `ProductCatalog`, `ProductDetailPage`, `ProductForm`, `CartPage`, `LoginPage`, `MyOrdersPage`, `NavBar` y `ProtectedRoute`. |
+| Persistencia | SQLite (`db.sqlite3`) y archivos subidos en `media/products/`. | `localStorage` con claves `token`, `user` y `cart`. |
+| Validación y errores | Los serializers devuelven `400`; el login inválido devuelve `401 {"detail": "Invalid credentials"}`; los endpoints de pedido exigen autenticación. | Estados de carga/error en cada pantalla; mensaje exacto de la API en `CartPage`; redirección a `/login` cuando no hay sesión. |
+
+### 2.1 Endpoints implementados
+
+| Método | Ruta | Permiso | Vista | Resultado principal |
+|---|---|---|---|---|
+| `GET`, `POST` | `/api/categories/` | Público | `CategoryViewSet` | Lista y crea categorías. |
+| `GET`, `PUT`, `PATCH`, `DELETE` | `/api/categories/{id}/` | Público | `CategoryViewSet` | Detalle y CRUD de una categoría. |
+| `GET`, `POST` | `/api/products/` | Público | `ProductViewSet` | Lista con categoría anidada; filtro opcional `?category=<id>`; creación multipart. |
+| `GET`, `PATCH`, `DELETE` | `/api/products/{id}/` | Público | `ProductViewSet` | Detalle, edición parcial y borrado. |
+| `POST` | `/api/auth/login/` | `AllowAny` | `LoginView` | `200` con `{ token, user }`; `401` si las credenciales fallan. |
+| `GET` | `/api/orders/` | `IsAuthenticated` | `OrderListCreateView` | Pedidos de `request.user`, ordenados por `created_at` descendente, con `items`. |
+| `POST` | `/api/orders/` | `IsAuthenticated` | `OrderListCreateView` | Crea el pedido con `201`; descuenta stock de forma atómica; `400` si falta stock. |
+
+### 2.2 Rutas del cliente
+
+| Ruta | Pantalla | Protección | Responsabilidad |
+|---|---|---|---|
+| `/` | `ProductCatalog` | No | Catálogo, filtro por categoría, alta rápida al carrito y acceso al detalle. |
+| `/products/:id` | `ProductDetailPage` | No | Detalle del producto y botón `Add to Cart`. |
+| `/create` | `ProductForm` | No | Alta de productos con `FormData`. |
+| `/edit/:id` | `ProductForm` | No | Edición de productos. |
+| `/cart` | `CartPage` | No, pero el checkout exige sesión | Líneas del carrito, cantidades, total provisional y `Place Order`. |
+| `/login` | `LoginPage` | No | Formulario controlado con mensaje de error y retorno a la ruta solicitada. |
+| `/my-orders` | `MyOrdersPage` | Sí, mediante `ProtectedRoute` | Pedidos del usuario con ID, fecha, estado, total confirmado y desglose. |
+
+---
+
+## 3. Dónde vive el carrito y por qué
+
+El carrito vive en dos capas complementarias:
+
+1. **Estado React global:** `CartProvider`, definido en
+   `src/context/CartContext.jsx`, mantiene el arreglo `items`. Se monta una sola
+   vez en `App.jsx`, por encima de `NavBar` y de las rutas, por lo que todas las
+   pantallas comparten la misma instancia sin propagar props.
+2. **Persistencia local:** la clave `cart` de `localStorage` guarda el arreglo
+   como JSON. `getStoredCart()` lo lee al iniciar, valida que sea un arreglo y
+   un `useEffect` vuelve a escribirlo después de cada cambio. Las claves
+   `token` y `user` se gestionan de forma análoga en `AuthContext`.
+
+La API expuesta por `useCart()` es:
+
+- `addToCart(product, quantity)`: agrega o acumula un producto por `id`.
+- `updateQuantity(productId, quantity)`: ajusta la cantidad, con mínimo 1.
+- `removeFromCart(productId)`: elimina la línea.
+- `clearCart()`: vacía el carrito tras un pedido confirmado.
+- `totalItems` y `provisionalTotal`: valores derivados con `useMemo`.
+
+### ¿Por qué este diseño?
+
+- **Supervivencia a recargas:** un visitante anónimo puede llenar el carrito,
+  recargar la página o navegar a otro módulo sin perderlo. No hace falta crear
+  una cuenta ni una sesión de servidor solo para guardar la selección.
+- **Única fuente de estado en la UI:** el contexto evita duplicar arreglos en
+  `ProductCatalog`, `ProductDetailPage`, `CartPage` y `NavBar`. El contador de la
+  cabecera se actualiza en tiempo real porque consume el mismo contexto.
+- **Desacoplamiento:** los componentes no conocen `localStorage`; solo llaman
+  al hook. La persistencia es un detalle de implementación del proveedor.
+- **Total explícitamente provisional:** el precio mostrado se usa solo para la
+  vista previa. El cliente envía únicamente `product_id` y `quantity` a
+  `POST /api/orders/`; el servidor consulta el precio vigente y vuelve a
+  calcular `unit_price` y `total`. Por eso la interfaz indica que el monto es
+  provisional hasta la validación del servidor.
+- **Checkout coherente:** si la API responde `201`, se limpia el carrito y se
+  redirige a `/my-orders` con la confirmación. Si responde error, el carrito se
+  conserva para que el usuario corrija cantidades sin perder su selección.
+
+---
+
+## 4. Descuento de stock y concurrencia
+
+### 4.1 ¿Por qué descontar al crear el pedido y no al pagarlo?
+
+En el paso 10 del laboratorio se descuenta el stock durante la **creación del
+pedido**, dentro de `OrderSerializer.create()`. El pago se trata como un paso
+posterior y separado. Esta decisión tiene varias ventajas:
+
+- **La base de datos es la fuente de verdad.** En cuanto el pedido nace, la
+  existencia queda reservada. Otro cliente que consulte `Product.stock` ve el
+  valor real y no puede comprar una unidad que ya fue comprometida.
+- **Evita venta por encima del stock.** Si el descuento se dejara para el pago,
+  dos clientes podrían ver `stock = 1`, iniciar dos pagos y terminar con dos
+  pedidos pagados por una sola unidad. El sistema tendría que reembolsar y
+  explicar la incidencia al cliente.
+- **Congela el acuerdo comercial.** `unit_price` se guarda por línea con el
+  precio vigente y `Order.total` se calcula en el servidor. Un cambio posterior
+  en `Product.price` no altera pedidos ya creados.
+- **Permite compensación controlada.** El pedido nace con estado `PENDING`. Si
+  el pago falla, se cancela el pedido y se devuelve el stock; si se confirma,
+  se cambia el estado a `CONFIRMED`. La cancelación y la devolución deben
+  ejecutarse juntas, preferiblemente en la misma transacción o mediante una
+  saga con eventos de compensación.
+- **Simplifica la auditoría.** Cada pedido conserva fecha, usuario, estado,
+  total y líneas; no depende de un evento de pago externo para reconstruir qué
+  se vendió.
+
+Descontar solo al pagar dejaría una ventana de inconsistencia entre “pedido
+creado” y “pago confirmado”. Esa ventana es precisamente donde aparece el caso
+de la última unidad.
+
+### 4.2 Mecanismos implementados para el caso de la última unidad
+
+La implementación actual combina tres mecanismos:
+
+1. **Transacción atómica:** `create()` está decorado con
+   `@transaction.atomic`. Si cualquier validación falla, se revierte todo:
+   no se crea el `Order`, no se crean los `OrderItem` y no se modifica el stock.
+2. **Bloqueo pesimista:** `Product.objects.select_for_update().filter(...)`
+   bloquea las filas de los productos involucrados dentro de la transacción.
+3. **Validación y actualización dentro de la transacción:** se suman las
+   cantidades repetidas de un mismo producto, se compara con `product.stock`,
+   se calcula el total y se guarda el stock con `save(update_fields=['stock'])`.
+
+Con dos pedidos simultáneos por la única unidad disponible, el primero adquiere
+el bloqueo, valida, descuenta a `0` y hace `commit`. El segundo queda esperando;
+cuando obtiene el bloqueo, relee `stock = 0` y responde
+`400` con `Insufficient stock...`. No se crea un segundo pedido ni se descuenta
+por debajo de cero.
+
+> En SQLite, `select_for_update()` no produce bloqueos de fila reales; el
+> motor serializa las escrituras. En producción con PostgreSQL o MySQL el
+> bloqueo de fila sí es efectivo y conviene ordenar los `product_id` antes de
+> bloquear para evitar interbloqueos.
+
+### 4.3 Mecanismos adicionales para mayor escala
+
+Cuando el volumen crece o el pago es asíncrono, conviene añadir:
+
+- **Reservas temporales:** una tabla de reservas con `product_id`, `quantity`,
+  `expires_at` y `order_id`. El pedido consume el stock disponible menos las
+  reservas vigentes; la reserva se libera si expira o si el pago falla.
+- **Colas de mensajes:** publicar los comandos de creación de pedidos en una
+  cola y procesarlos de forma serializada por producto. Esto reduce la
+  contención en la base de datos y permite reintentos controlados.
+- **Control optimista:** un campo `version` o una actualización condicional con
+  `F('stock')` y un filtro `stock__gte=quantity`; si no afecta filas, otro
+  pedido ganó la carrera y se devuelve `400`.
+- **Idempotencia:** una clave de idempotencia por checkout evita duplicar
+  pedidos si el cliente reintenta tras un timeout de red.
+- **Saga de pago:** eventos de `payment_failed` y `payment_confirmed` que
+  cancelan/restauran o confirman el pedido, con un estado final coherente.
+
+---
+
+## 5. Auditoría de normas de código
+
+| Norma | Comprobación | Resultado |
+|---|---|---|
+| Inglés en código y comentarios | Revisión de nombres, docstrings y comentarios en `.py`, `.js` y `.jsx`. | Correcto. No se encontraron identificadores ni comentarios en español. |
+| PEP 8 en Python | Longitud máxima de 79 caracteres en todos los `.py`, ausencia de tabuladores y de whitespace final. | Correcto. Las dos migraciones generadas se ajustaron sin cambiar sus operaciones. |
+| Modelos en singular | `Category`, `Product`, `Order`, `OrderItem`. | Correcto. |
+| Migraciones versionadas | `0001_initial.py` y `0002_order_orderitem.py`. | Correcto; `makemigrations --check --dry-run` no detecta cambios. |
+| Sin credenciales en `settings.py` | `SECRET_KEY` y `DEBUG` se leen desde variables de entorno. | Correcto. |
+| Componentes PascalCase y una carpeta por componente | `CartPage`, `LoginPage`, `MyOrdersPage`, `NavBar`, `ProductCatalog`, `ProductDetailPage`, `ProductForm`, `ProtectedRoute`. | Correcto. |
+| Hooks con prefijo `use` | `useAuth` y `useCart`, además de los hooks nativos. | Correcto. |
+| Capa de servicios | Solo `src/services/` importa Axios y construye URLs de API. | Correcto. |
+| Lint y build del cliente | `npm.cmd run lint` y `npm.cmd run build`. | Sin errores ni advertencias. |
+| Verificación del servidor | `manage.py check` y `makemigrations --check --dry-run`. | Sin problemas y sin cambios pendientes. |
+
+Pruebas funcionales ejecutadas durante el laboratorio:
+
+- Login válido: `200` con `token` y `user`; credenciales inválidas: `401`.
+- Pedido con stock 1: `201`, `total` recalculado por el servidor y stock `1 → 0`.
+- Segundo pedido por la misma unidad: `400` con mensaje de stock insuficiente,
+  sin pedido adicional y sin descuento negativo.
+- `GET /api/orders/`: solo los pedidos del usuario autenticado.
+- Checkout sin sesión: redirección a `/login`; con sesión y `201`:
+  redirección a `/my-orders` con confirmación y carrito vacío.
+
+---
+
+## 6. Puesta en marcha
+
+Servidor:
 
 ```powershell
-cd semana13/backend
+cd semana14/backend
+$env:DJANGO_SECRET_KEY = [guid]::NewGuid().ToString()
 py -3.13 -m pip install -r requirements.txt
-py -3.13 manage.py makemigrations
 py -3.13 manage.py migrate
-py -3.13 create_superuser.py
-py -3.13 seed.py
+py -3.13 manage.py create_test_users
 py -3.13 manage.py runserver 8000
 ```
 
-> En este sistema Windows se usa `py -3.13` porque el alias `python` apunta a
-> Microsoft Store. En otros equipos puede utilizarse `python`.
+Las contraseñas de los usuarios de prueba se leen desde
+`DJANGO_TEST_USER_PASSWORD` y `DJANGO_TEST_ADMIN_PASSWORD`; no se escriben en
+`settings.py`.
 
-Configuración relevante de `config/settings.py`:
-
-```python
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
-```
-
-No se usa `CORS_ALLOW_ALL_ORIGINS = True`. La clave secreta, `DEBUG` y los hosts
-permitidos se leen desde variables de entorno con `os.environ.get`.
-
-### 1.2 Cliente Front-End (`semana13/frontend`)
-
-Responsabilidades:
-
-| Archivo | Responsabilidad |
-|---|---|
-| `src/services/apiClient.js` | Única instancia de Axios; `baseURL: import.meta.env.VITE_API_BASE_URL`. |
-| `src/services/categoryService.js` | `getCategories`, `getCategoryById`, `createCategory`, `updateCategory`, `deleteCategory`. |
-| `src/services/productService.js` | `getProducts`, `getProductById`, `createProduct`, `updateProduct`, `deleteProduct`. |
-| `src/components/ProductCatalog/` | Catálogo, filtro dinámico, estados de carga/error/datos y borrado local. |
-| `src/components/ProductForm/` | Alta y edición en un mismo componente, `FormData` y errores HTTP 400. |
-| `src/components/NavBar/` | Navegación limpia entre `/`, `/create` y `/edit/:id`. |
-| `src/App.jsx` | `BrowserRouter` y definición de rutas. |
-
-Comandos exactos de arranque:
+Cliente:
 
 ```powershell
-cd semana13/frontend
+cd semana14/frontend
 npm install
+Copy-Item .env.example .env
 npm.cmd run dev -- --port 5173 --strictPort
 ```
 
-> Se usa `npm.cmd` porque PowerShell bloquea `npm.ps1` según la política de
-> ejecución. `npm run dev` también funciona si la política lo permite. El puerto
-> 5173 es obligatorio porque es el origen autorizado por CORS.
-
-Archivo `.env` (versionado como `.env.example`, `.env` ignorado por Git):
-
-```txt
-VITE_API_BASE_URL=http://127.0.0.1:8000/api
-```
-
-Admin: `http://127.0.0.1:8000/admin/` · usuario `admin` · contraseña `admin123`.
-
----
-
-## 2. Auditoría de desacoplamiento de la capa de servicios (Criterio 3)
-
-Se revisaron los tres componentes de `src/components/` y sus importaciones:
-
-| Componente | Importaciones realizadas | `axios` directo | URLs de API hardcodeadas | Resultado |
-|---|---|---|---|---|
-| `ProductCatalog/ProductCatalog.jsx` | `react`, `react-router-dom`, `categoryService`, `productService`, CSS propio | No | No | ✅ Pasa |
-| `ProductForm/ProductForm.jsx` | `react`, `react-router-dom`, `categoryService`, `productService`, CSS propio | No | No | ✅ Pasa |
-| `NavBar/NavBar.jsx` | `react-router-dom`, CSS propio | No | No | ✅ Pasa |
-
-Comandos de verificación ejecutados y resultado:
-
-```text
-grep -E "axios|https?://|/products/|/categories/" src/components/**/*.{js,jsx}
-  → No matches found
-
-grep -R "axios" src/
-  → src/services/apiClient.js: import axios from 'axios';
-  → src/services/apiClient.js: const apiClient = axios.create({ ... });
-```
-
-Por lo tanto, **Axios aparece exclusivamente en `apiClient.js`** y todas las rutas
-de la API están concentradas en `categoryService.js` y `productService.js`.
-Ningún componente construye una URL ni conoce la dirección del servidor.
-
-### Control de archivos ignorados
-
-| Ubicación | Reglas verificadas con `git check-ignore -v` |
-|---|---|
-| `semana13/backend/.gitignore` | `__pycache__/`, `db.sqlite3`, `media/`, `.env` y `.env.*` (con excepción de `!.env.example`). |
-| `semana13/frontend/.gitignore` | `node_modules`, `dist`, `.env` y `.env.*` (con excepción de `!.env.example`). |
-
-La carpeta `media/` se ignora porque es un artefacto reproducible: `seed.py` vuelve
-a generar las 8 imágenes PNG de muestra con Pillow en cada instalación limpia.
-`.env` se ignora por contener configuración local; `.env.example` sí se versiona.
-
----
-
-## 3. Diagrama del Catálogo (Mermaid ER)
-
-```mermaid
-erDiagram
-    CATEGORY ||--o{ PRODUCT : "contains"
-    CATEGORY {
-        int id PK
-        string name
-        text description
-    }
-    PRODUCT {
-        int id PK
-        int category_id FK
-        string name
-        text description
-        decimal price
-        int stock
-        string image
-    }
-```
-
-La relación es **1:N**: una categoría contiene muchos productos, y cada producto
-pertenece a una sola categoría. En el modelo de Django el campo se declara como:
-
-```python
-category = models.ForeignKey(
-    Category,
-    on_delete=models.CASCADE,
-    related_name='products',
-)
-```
-
----
-
-## 4. Tabla de Endpoints de la API
-
-Base: `http://127.0.0.1:8000/api`. Los `ViewSet` son `ModelViewSet`, por lo que
-todas las operaciones CRUD están disponibles para ambos recursos.
-
-| Método | Ruta | Descripción | Payload esperado | Respuesta |
-|---|---|---|---|---|
-| `GET` | `/api/categories/` | Lista las 3 categorías ordenadas por `id`. | Ninguno. | `200` · `[{ "id": 1, "name": "Electronics", "description": "..." }, ...]` |
-| `POST` | `/api/categories/` | Crea una categoría. | `application/json`: `{ "name": "Books", "description": "..." }` | `201` · objeto categoría con `id`. |
-| `GET` | `/api/categories/{id}/` | Detalle de una categoría. | Ninguno. | `200` · objeto categoría. |
-| `PUT` / `PATCH` | `/api/categories/{id}/` | Actualiza una categoría. | `{ "name": "...", "description": "..." }` | `200` · objeto actualizado. |
-| `DELETE` | `/api/categories/{id}/` | Elimina una categoría y, por `CASCADE`, sus productos. | Ninguno. | `204` · sin cuerpo. |
-| `GET` | `/api/products/` | Lista los 8 productos con la categoría **anidada**. | Ninguno. | `200` · arreglo de objetos producto (ver ejemplo). |
-| `GET` | `/api/products/?category={id}` | Filtra productos por categoría. Un ID no numérico devuelve una lista vacía. | Query param `category`. | `200` · arreglo filtrado con la misma serialización anidada. |
-| `POST` | `/api/products/` | Crea un producto con imagen. | `multipart/form-data`: `name`, `description`, `price`, `stock`, `category_id`, `image` (opcional). | `201` · objeto producto con `category` anidado. |
-| `GET` | `/api/products/{id}/` | Detalle de un producto. | Ninguno. | `200` · objeto producto con `category` anidado. |
-| `PATCH` | `/api/products/{id}/` | Actualización parcial; si no se envía `image`, se conserva la actual. | `multipart/form-data` con los campos a cambiar y `category_id`. | `200` · objeto actualizado. |
-| `DELETE` | `/api/products/{id}/` | Elimina un producto. | Ninguno. | `204` · sin cuerpo. |
-| `GET` | `/media/products/{file}.png` | Sirve la imagen cargada (solo con `DEBUG=True`). | Ninguno. | `200` · `Content-Type: image/png`. |
-
-Ejemplo de respuesta de `GET /api/products/` con serialización anidada:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Wireless Headphones",
-    "description": "Over-ear headphones with active noise cancellation.",
-    "price": "89.90",
-    "stock": 12,
-    "image": "http://127.0.0.1:8000/media/products/wireless-headphones.png",
-    "category": {
-      "id": 1,
-      "name": "Electronics",
-      "description": "Devices and gadgets for everyday use."
-    }
-  }
-]
-```
-
-El campo `category_id` **no aparece en la respuesta** porque está declarado como
-`write_only=True`. El cliente envía el identificador y recibe el objeto completo
-de la categoría en la misma petición HTTP.
-
----
-
-## 5. Serializadores anidados: lectura anidada y escritura por ID (Criterio 2)
-
-`ProductSerializer` declara dos campos para la misma relación `category`:
-
-```python
-class ProductSerializer(serializers.ModelSerializer):
-    """Serialize products with nested category data on read."""
-
-    category = CategorySerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(),
-        source='category',
-        write_only=True,
-    )
-
-    class Meta:
-        model = Product
-        fields = [
-            'id', 'name', 'description', 'price', 'stock',
-            'image', 'category', 'category_id',
-        ]
-```
-
-### Lectura (GET)
-
-- `category = CategorySerializer(read_only=True)` reemplaza el identificador por
-  el objeto completo `{ id, name, description }`.
-- El front-end obtiene `product.category.name` directamente desde la respuesta de
-  `/api/products/`: **no necesita una segunda petición** a `/api/categories/` por
-  cada producto.
-- `ProductViewSet.get_queryset()` usa `select_related('category')` para resolver la
-  relación con una sola consulta SQL y evitar el problema N+1.
-
-### Escritura (POST / PATCH)
-
-- `category_id` es un `PrimaryKeyRelatedField` con `queryset=Category.objects.all()`:
-  valida que el ID exista; si no, DRF responde `400 Bad Request`.
-- `source='category'` indica a DRF que escriba el objeto validado en el campo
-  `ForeignKey` del modelo, aunque el JSON/formulario use el nombre `category_id`.
-- `write_only=True` oculta ese campo en la salida, de modo que la respuesta solo
-  contiene la versión anidada legible.
-- El front-end construye un `FormData` con `category_id` como texto y la imagen como
-  archivo; Axios envía `Content-Type: multipart/form-data` y DRF lo procesa con
-  `MultiPartParser`.
-
-Resultado: **una sola petición HTTP resuelve lectura y escritura** de la relación,
-cumpliendo el Criterio 2 de la rúbrica.
-
----
-
-## 6. Estados de la interfaz
-
-| Estado | Condición | Interfaz |
-|---|---|---|
-| Carga | `isLoading = true` | Esqueleto de 6 tarjetas y texto **`Loading catalog...`**. |
-| Error | `error !== null` | Alerta roja con el detalle técnico y botón **`Retry`** que repite la petición. |
-| Datos | `isLoading = false`, `error = null` | Cuadrícula de tarjetas con imagen (o fallback `No image available`), categoría anidada, nombre, descripción, `$price`, `stock`, y botones **`Edit`** y **`Delete`**. |
-
-En `ProductForm`, un envío vacío produce `400` y los mensajes del serializer
-(`This field may not be blank.`, `A valid number is required.`,
-`This field may not be null.`) se muestran junto a cada campo. Tras guardar,
-`useNavigate()` redirige a `/`.
-
----
-
-## 7. Verificación final realizada
-
-```text
-py -3.13 manage.py check                       → sin problemas
-GET /api/categories/                           → 200, 3 categorías
-GET /api/products/                             → 200, 8 productos con category anidada
-GET /api/products/?category=1                  → 200, 4 productos (Electronics)
-GET /api/products/?category=abc                → 200, 0 productos
-GET /media/products/wireless-headphones.png    → 200, image/png
-POST /api/products/ (multipart)                → 201, Content-Type: multipart/form-data
-PATCH /api/products/1/ (multipart)             → 200, imagen conservada
-POST /api/products/ (vacío)                    → 400 con mensajes por campo
-Admin login admin/admin123                     → correcto
-seed.py ejecutado dos veces                    → 3 categorías, 8 productos, 8 PNG (idempotente)
-npm.cmd run build                              → compilación correcta
-npm.cmd run lint                               → sin errores ni advertencias
-```
-
----
-
-## 8. Commits del laboratorio
-
-| Commit | Descripción |
-|---|---|
-| `38c3869` | `feat(semana13): agregar backend e-commerce con Django REST` |
-| `d8b06bd` | `feat(semana13): agregar cliente React con catálogo de productos` |
-| — | `docs(semana13): documentar arquitectura, endpoints y serializadores` |
-
-Los dos primeros commits contienen las implementaciones auditadas; el tercero
-incorpora este documento.
+La URL base de la API se define en `.env` mediante
+`VITE_API_BASE_URL=http://127.0.0.1:8000/api`.
