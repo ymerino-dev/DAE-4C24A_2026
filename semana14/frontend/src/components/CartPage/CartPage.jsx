@@ -1,11 +1,29 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
+import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { createOrder } from '../../services/orderService';
 import './CartPage.css';
 
+const getApiErrorMessage = (requestError) => {
+  const data = requestError.response?.data;
+
+  if (typeof data?.detail === 'string') {
+    return data.detail;
+  }
+  if (typeof data?.items === 'string') {
+    return data.items;
+  }
+  if (Array.isArray(data?.items)) {
+    return data.items.join(' ');
+  }
+
+  return 'Unable to place the order. Please try again.';
+};
+
 function CartPage() {
+  const { isAuthenticated } = useAuth();
   const {
     items,
     updateQuantity,
@@ -14,14 +32,18 @@ function CartPage() {
     totalItems,
     provisionalTotal,
   } = useCart();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [confirmation, setConfirmation] = useState(null);
 
   const handleCheckout = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/cart' } });
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
-    setConfirmation(null);
 
     try {
       const response = await createOrder(
@@ -31,14 +53,20 @@ function CartPage() {
         })),
       );
 
-      setConfirmation(response.data);
-      clearCart();
+      if (response.status === 201) {
+        clearCart();
+        navigate('/my-orders', {
+          state: {
+            confirmation: {
+              id: response.data.id,
+              total: response.data.total,
+              status: response.data.status,
+            },
+          },
+        });
+      }
     } catch (requestError) {
-      const detail =
-        requestError.response?.data?.detail ||
-        requestError.response?.data?.items ||
-        'Unable to place the order. Please try again.';
-      setError(typeof detail === 'string' ? detail : JSON.stringify(detail));
+      setError(getApiErrorMessage(requestError));
     } finally {
       setIsSubmitting(false);
     }
@@ -51,13 +79,6 @@ function CartPage() {
       {error && (
         <p className="cart-error" role="alert">
           {error}
-        </p>
-      )}
-
-      {confirmation && (
-        <p className="cart-success" role="status">
-          Order #{confirmation.id} placed with total $
-          {Number(confirmation.total).toFixed(2)}.
         </p>
       )}
 
@@ -78,9 +99,7 @@ function CartPage() {
                     alt={item.name}
                   />
                 ) : (
-                  <div className="cart-item-placeholder">
-                    No image available
-                  </div>
+                  <div className="cart-item-placeholder">No image available</div>
                 )}
 
                 <div className="cart-item-details">

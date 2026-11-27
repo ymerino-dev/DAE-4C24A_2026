@@ -39,6 +39,16 @@ function NavBar() {
         >
           Cart <span className="cart-count">{totalItems}</span>
         </NavLink>
+        {user && (
+          <NavLink
+            to="/my-orders"
+            className={({ isActive }) =>
+              isActive ? 'nav-link active' : 'nav-link'
+            }
+          >
+            My Orders
+          </NavLink>
+        )}
         {user ? (
           <>
             <span className="navbar-user">{user.username}</span>

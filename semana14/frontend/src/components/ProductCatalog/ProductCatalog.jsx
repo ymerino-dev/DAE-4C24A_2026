@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useCart } from '../../context/CartContext';
 import { getCategories } from '../../services/categoryService';
@@ -144,7 +144,11 @@ function ProductCatalog() {
                 <span className="product-category">
                   {product.category?.name}
                 </span>
-                <h2>{product.name}</h2>
+                <h2>
+                  <Link className="product-detail-link" to={`/products/${product.id}`}>
+                    {product.name}
+                  </Link>
+                </h2>
                 <p className="product-description">{product.description}</p>
                 <div className="product-meta">
                   <span className="product-price">${product.price}</span>

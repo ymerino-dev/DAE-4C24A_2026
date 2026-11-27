@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
 import './LoginPage.css';
@@ -7,6 +7,7 @@ import './LoginPage.css';
 function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +20,7 @@ function LoginPage() {
 
     try {
       await login(username, password);
-      navigate('/');
+      navigate(location.state?.from || '/', { replace: true });
     } catch (requestError) {
       const detail = requestError.response?.data?.detail;
       setError(detail || 'Unable to sign in. Please try again.');
